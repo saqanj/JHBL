@@ -21,7 +21,7 @@ theta_gamma = theta_beta;
 
 %% Defining General Linear Transforms
 R = speye(n); % Most general choice for R
-R_rows = n; % Number of rows in R
+K = n; % Number of rows in R
 
 %% Defining the Forward Operator & Data
 F = cell(J,1); % Forward operators
@@ -49,9 +49,35 @@ gamma = ones(J - 1,1); % J-1 x 1 matrix, gamma hyperparameters,
                        %  J-1 x 1 matrix.
 for j=1:J
     x{j} = randn(n, 1);
-    beta{j} = ones(R_rows, 1);
+    beta{j} = ones(K, 1);
 end
 for j=1:J-1
-    gamma{j} = ones(R_rows, 1);
+    gamma{j} = ones(n, 1);
 end
 %% Algorithmic Iterations (All Remaining Steps)
+for l = 1:max_iter
+    x_old = x;
+
+    % -- alpha update
+    for j = 1:J
+        M_j = size(F{j},1)
+        alpha{j} = (eta_alpha + M_j/2 - 1) / (theta_alpha + 0.5 * norm(F{j} * x{j} - y{j})^2);
+    end
+
+    % -- beta update
+    for j = 1:J
+        R_x = R * x{j};
+        beta{j} = (eta_beta - 0.5) ./ (theta_beta + 0.5 * R_x.^2);
+    end
+
+    % -- gamma update
+    for j = 2:J
+        gamma{j-1} = (eta_gamma - 0.5) ./ (theta_gamma + 0.5 * (x{j-1} - x{j}).^2);
+    end
+
+    % change mask code: 
+    % change mask entry = 0 if change region
+    % change mask entry = 1 if no change region
+    % equation 3 ****, ask about tomorrow if make no sense
+
+    % also add norm difference code down here, it is correct.
