@@ -23,19 +23,23 @@ theta_gamma = theta_beta;
 R = speye(N); % Most general choice for R
 R_rows = N; % Number of rows in R
 
-
 %% Defining the Forward Operator & Data
 F = cell(J,1); % Forward operators
 y = cell(J,1); % Measured data
 x_ground_truth = cell(J, 1); % Ground truth images.
 
-
 for j = 1:J
-    F{j} = 
-
+    curr_truth_j = randn(N, 1);
+    x_ground_truth{j} = curr_truth_j;
+    F_j = eye(N);
+    F{j} = F_j;
+    F_j_rows = N;
+    noise = sqrt(1 / eta_alpha) * randn(F_j_rows, 1); % Equation 5 in Paper
+    y{j} = F_j * curr_truth_j + noise;
+end
 
 %% Initialization (Algorithm Step 1)
-x = cell(J, 1); % J x 1 matrix, images
+x = cell(J, 1); % J x 1 matrix, images to reconstruct
 alpha = ones(J,1); % J x 1 matrix, alpha hyperparameters, noise precision
 beta = ones(J,1); % J x 1 matrix, beta hyperparameters, 
                   % intra-image regularization weight
@@ -43,3 +47,11 @@ gamma = ones(J - 1,1); % J-1 x 1 matrix, gamma hyperparameters,
                        %  NOTE: gamma is a coupling weight between 
                        %  image x{j} and x{j+1}, so it must be a 
                        %  J-1 x 1 matrix.
+for j=1:J
+    x{j} = randn(N, 1);
+    beta{j} = ones(R_rows, 1);
+end
+for j=1:J-1
+    gamma{j} = ones(R_rows, 1);
+end
+%% Algorithmic Iterations (All Remaining Steps)
