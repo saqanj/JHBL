@@ -6,7 +6,7 @@
 %% Equation Parameters
 J = 10; % Num. Images
 n = 128; % Value of N for NXN Dimension
-n_1D = N^2; % Flattened length for 1-D Case
+n_1D = n^2; % Flattened length for 1-D Case
 max_iterations = 10^3; % For algorithm stopping condition.
 max_difference = 10^-3; % For algorithm stopping condition.
 
