@@ -1,0 +1,45 @@
+%% JHBL (Joint Hierarchical Bayesian Learning) Algorithm
+% Based on Sequential Image Recovery Using Joint Hierarchical Bayesian
+% Learning (Xiao & Glaubitz 2023)
+% By: Shamsher Tamang & Saqlain Anjum
+
+%% Equation Parameters
+J = 10; % Num. Images
+n = 128; % Value of N for NXN Dimension
+n_1D = N^2; % Flattened length for 1-D Case
+max_iterations = 10^3; % For algorithm stopping condition.
+max_difference = 10^-3; % For algorithm stopping condition.
+
+%% Equation Hyperparameters
+eta_alpha = 1;
+eta_beta = eta_alpha;
+eta_gamma = 2;
+
+theta_alpha = 10^-3;
+theta_beta = theta_alpha;
+theta_gamma = theta_beta;
+
+%% Defining General Linear Transforms
+R = speye(N); % Most general choice for R
+R_rows = N; % Number of rows in R
+
+
+%% Defining the Forward Operator & Data
+F = cell(J,1); % Forward operators
+y = cell(J,1); % Measured data
+x_ground_truth = cell(J, 1); % Ground truth images.
+
+
+for j = 1:J
+    F{j} = 
+
+
+%% Initialization (Algorithm Step 1)
+x = cell(J, 1); % J x 1 matrix, images
+alpha = ones(J,1); % J x 1 matrix, alpha hyperparameters, noise precision
+beta = ones(J,1); % J x 1 matrix, beta hyperparameters, 
+                  % intra-image regularization weight
+gamma = ones(J - 1,1); % J-1 x 1 matrix, gamma hyperparameters, 
+                       %  NOTE: gamma is a coupling weight between 
+                       %  image x{j} and x{j+1}, so it must be a 
+                       %  J-1 x 1 matrix.
