@@ -5,7 +5,7 @@
 
 %% Equation Parameters
 J = 10; % Num. Images
-n = 128; % Value of N for NXN Dimension
+n = 128; % Value of n for nXn Dimension
 n_1D = n^2; % Flattened length for 1-D Case
 max_iterations = 10^3; % For algorithm stopping condition.
 max_difference = 10^-3; % For algorithm stopping condition.
@@ -20,8 +20,8 @@ theta_beta = theta_alpha;
 theta_gamma = theta_beta;
 
 %% Defining General Linear Transforms
-R = speye(N); % Most general choice for R
-R_rows = N; % Number of rows in R
+R = speye(n); % Most general choice for R
+R_rows = n; % Number of rows in R
 
 %% Defining the Forward Operator & Data
 F = cell(J,1); % Forward operators
@@ -29,11 +29,11 @@ y = cell(J,1); % Measured data
 x_ground_truth = cell(J, 1); % Ground truth images.
 
 for j = 1:J
-    curr_truth_j = randn(N, 1);
+    curr_truth_j = randn(n, 1);
     x_ground_truth{j} = curr_truth_j;
-    F_j = eye(N);
+    F_j = eye(n);
     F{j} = F_j;
-    F_j_rows = N;
+    F_j_rows = n;
     noise = sqrt(1 / eta_alpha) * randn(F_j_rows, 1); % Equation 5 in Paper
     y{j} = F_j * curr_truth_j + noise;
 end
@@ -48,7 +48,7 @@ gamma = ones(J - 1,1); % J-1 x 1 matrix, gamma hyperparameters,
                        %  image x{j} and x{j+1}, so it must be a 
                        %  J-1 x 1 matrix.
 for j=1:J
-    x{j} = randn(N, 1);
+    x{j} = randn(n, 1);
     beta{j} = ones(R_rows, 1);
 end
 for j=1:J-1
