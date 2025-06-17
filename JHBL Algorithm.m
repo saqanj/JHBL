@@ -53,9 +53,9 @@ gamma = ones(J - 1, n); % J-1 x 1 matrix, gamma hyperparameters,
                        %  J-1 x 1 matrix.
                      
 %% Algorithmic Iterations (All Remaining Steps)
-M = zeros(J, 1)
+M = zeros(J, 1);
 for j = 1:J
-    M(j) = length(y(j, :))
+    M(j) = length(y(j, :));
 end
 
 for l = 1:max_iter
@@ -86,32 +86,32 @@ for l = 1:max_iter
         %computing G for each image
         % computing change mask for G and b
         if j == 1
-            change_mask_for_G = diag(gamma(j, :))
-            change_mask_term_for_b = diag(gamma(j, :)) * x(j+1, :)
+            change_mask_for_G = diag(gamma(j, :));
+            change_mask_term_for_b = diag(gamma(j, :)) * x(j+1, :);
         elseif j == J
-            change_mask_for_G = diag(gamma(j-1, :))
-            change_mask_term_for_b = diag(gamma(j-1, :)) * x(j-1, :)
+            change_mask_for_G = diag(gamma(j-1, :));
+            change_mask_term_for_b = diag(gamma(j-1, :)) * x(j-1, :);
         else
-            change_mask_for_G = diag(gamma(j-1, :)) + diag(gamma(j, :))
-            change_mask_term_for_b = diag(gamma(j-1, :)) * x(j-1, :) + diag(gamma(j, :)) * x(j+1, :)
+            change_mask_for_G = diag(gamma(j-1, :)) + diag(gamma(j, :));
+            change_mask_term_for_b = diag(gamma(j-1, :)) * x(j-1, :) + diag(gamma(j, :)) * x(j+1, :);
         end
         
         % computing B_j
-        B_j = diag(beta(j, :))
+        B_j = diag(beta(j, :));
 
-        G_j = alpha(j, :)*(F')*F+ (R')*B_j*R + change_mask_for_G
-        b_j = alpha(j, :)*(F')*y(j, :) + change_mask_term_for_b
+        G_j = alpha(j, :)*(F')*F+ (R')*B_j*R + change_mask_for_G;
+        b_j = alpha(j, :)*(F')*y(j, :) + change_mask_term_for_b;
                 
         % solving x from the linear system in equation 34
         %for solving we use gradient desncet iterating 5 times, citation 24
 
         % solution of x using citation 24
-        r = b_j - G_j * x(j, :)
+        r = b_j - G_j * x(j, :);
         for i = 1:5
-            G_r = G_j * r
-            step_size = (r')*r/(r'*G_r)
-            x(j, :) = x(j, :) + step_size * r
-            r = r - step_size * G_r
+            G_r = G_j * r;
+            step_size = (r')*r/(r'*G_r);
+            x(j, :) = x(j, :) + step_size * r;
+            r = r - step_size * G_r;
         end
         % solution of x ended
 
@@ -120,19 +120,18 @@ for l = 1:max_iter
     % terminate loop if absolute and relative change condition is met
     % we compute the average absolute and relative change between two subsequent image
     % sequences
-    absolute_change_matrix(:, :) = x(:,:) - x_old(:, :)
-    absolute_change_norm_sum = 0
-    relative_change_norm_sum = 0
+    absolute_change_matrix(:, :) = x(:,:) - x_old(:, :);
+    absolute_change_norm_sum = 0;
+    relative_change_norm_sum = 0;
     for i = 1:J
-        abs_change_norm = norm(absolute_change_matrix(j, :), 2)
-        absolute_change_norm_sum = absolute_change_norm_sum + abs_change_norm
-        relative_change_norm_sum = absolute_change_norm_sum + abs_change_norm/norm(x(j, :), 2)
+        abs_change_norm = norm(absolute_change_matrix(j, :), 2);
+        absolute_change_norm_sum = absolute_change_norm_sum + abs_change_norm;
+        relative_change_norm_sum = absolute_change_norm_sum + abs_change_norm/norm(x(j, :), 2);
     end
-    average_absolute_change = absolute_change_norm_sum/(J-1)
-    average_relative_change = relative_change_norm_sum/(J-1)
+    average_absolute_change = absolute_change_norm_sum/(J-1);
+    average_relative_change = relative_change_norm_sum/(J-1);
 
     if average_absolute_change < 10^(-3) && average_relative_change < 10^(-3)
         break
     end
 end
-%% test shamsher github
