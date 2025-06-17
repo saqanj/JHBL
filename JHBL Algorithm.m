@@ -108,10 +108,8 @@ for l = 1:max_iter
         % solution of x using citation 24
         r = b_j - G_j * x(j, :)
         for i = 1:5
-            % finding G_r
-            G_r = % need to figure this out
-            % Gr find end
-            step_size = (r')*r
+            G_r = G_j * r
+            step_size = (r')*r/(r'*G_r)
             x(j, :) = x(j, :) + step_size * r
             r = r - step_size * G_r
         end
