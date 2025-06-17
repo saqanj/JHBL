@@ -5,7 +5,7 @@
 
 %% Equation Parameters
 J = 10; % Num. Images
-n = 128; % Value of n for nXn Dimension
+n = 1; % Value of n for nXn Dimension
 n_1D = n^2; % Flattened length for 1-D Case
 max_iterations = 10^3; % For algorithm stopping condition.
 max_difference = 10^-3; % For algorithm stopping condition.
@@ -34,8 +34,8 @@ noise_dimension = n;
 
 idx_pool = randi([1, n], sparsity_level, 1);    % the indices to be changed to 1
 for j = 1:J
-    curr_truth_j = zeros(n, 1)
-    curr_truth_j(idx_pool) = 1
+    curr_truth_j = zeros(n, 1);
+    curr_truth_j(idx_pool) = 1;
     x_ground_truth(j, :) = curr_truth_j;
     noise = noise_mean + noise_sd .* randn(noise_dimension, 1);   % noise of normal distribution with noise_mean and noise_sd
     y(j, :) = F * curr_truth_j + noise;
@@ -51,7 +51,7 @@ gamma = ones(J - 1, n); % J-1 x 1 matrix, gamma hyperparameters,
                        %  NOTE: gamma is a coupling weight between 
                        %  image x{j} and x{j+1}, so it must be a 
                        %  J-1 x 1 matrix.
-                     
+max_iter = 10^3; % Maximum number of loop iterations                     
 %% Algorithmic Iterations (All Remaining Steps)
 M = zeros(J, 1);
 for j = 1:J
@@ -135,3 +135,8 @@ for l = 1:max_iter
         break
     end
 end
+
+%% Generating Visualizations
+figure;
+plot(x_ground_truth(j, :));
+plot(x(j, :));
