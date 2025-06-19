@@ -122,7 +122,7 @@ for l = 1:max_iter
     % terminate loop if absolute and relative change condition is met
     % we compute the average absolute and relative change between two subsequent image
     % sequences
-    absolute_change_matrix = zeros(n, J);
+    
     absolute_change_matrix(:, :) = x(:,:) - x_old(:, :);
     absolute_change_norm_sum = 0;
     relative_change_norm_sum = 0;
