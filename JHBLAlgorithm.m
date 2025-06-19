@@ -128,7 +128,7 @@ for l = 1:max_iter
     for j = 1:J
         abs_change_norm = norm(absolute_change_matrix(:, j), 2);
         absolute_change_norm_sum = absolute_change_norm_sum + abs_change_norm;
-        relative_change_norm_sum = (absolute_change_norm_sum + abs_change_norm)/norm(x(:, j), 2);
+        relative_change_norm_sum = absolute_change_norm_sum + abs_change_norm/norm(x(:, j), 2);
     end
     average_absolute_change = absolute_change_norm_sum/(J-1);
     average_relative_change = relative_change_norm_sum/(J-1);
@@ -138,7 +138,9 @@ for l = 1:max_iter
     end
 end
 
-figure;plot(x(:, 1)); hold on;
+figure;
+plot(x(:, 1)); 
+hold on;
 plot(x_ground_truth(:, 1)); 
 hold off;
 legend('Prediction','Actual');
