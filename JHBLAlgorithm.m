@@ -142,12 +142,3 @@ figure;plot(x(:, 1)); hold on;
 plot(x_ground_truth(:, 1)); 
 hold off;
 legend('Prediction','Actual');
-
-
-% I think this is delulu
-% figure;
-% for j = 1:J
-%     plot(x(:, j)); hold on;
-%     when the next one comes slowly fade away
-% end
-% hold off;
