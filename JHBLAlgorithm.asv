@@ -3,14 +3,13 @@
 % Learning (Xiao & Glaubitz 2023)
 % By: Shamsher Tamang & Saqlain Anjum
 
-%% Equation Parameters
+%% Defining Important Variables
 J = 10; % Num. Images
 n = 100; % Value of n for nXn Dimension
-n_1D = n^2; % Flattened length for 1-D Case
 max_iterations = 10^3; % For algorithm stopping condition.
 max_difference = 10^(-3); % For algorithm stopping condition.
 
-%% Equation Hyperparameters
+%% Defining Equation Hyperparameters
 eta_alpha = 1;
 eta_beta = eta_alpha;
 eta_gamma = 2;
@@ -27,40 +26,38 @@ K = n; % Number of rows in R
 F = eye(n);  % Forward operators
 y = zeros(n,J); % Measured data
 x_ground_truth = zeros(n, J); % Ground truth images.
-sparsity_level = 8; % number of non-zeros
-noise_mean = 0;
+sparsity_level = 8; % number of non-zero entries in idx_pool
+noise_mean = 0;     % Defining all noise related parameters
 noise_sd = 0.1;
 noise_dimension = n;
 
 idx_pool = randi([1, n], sparsity_level, 1);    % the indices to be changed to 1
 for j = 1:J
     curr_truth_j = zeros(n, 1);
-    curr_truth_j(idx_pool) = 1;
-    x_ground_truth(:, j) = curr_truth_j;
+    curr_truth_j(idx_pool) = 1; % producing column vectors with exactly sparsity_level entries set to 1
+                                         % at random locations
+    x_ground_truth(:, j) = curr_truth_j; 
     noise = noise_mean + noise_sd .* randn(noise_dimension, 1);   % noise of normal distribution with noise_mean and noise_sd
     y(:, j) = F * curr_truth_j + noise;
     idx_pool(end-1:end) = mod(idx_pool(end-1:end), n) + 1;    % update the last two indices to force changes, changes made here
 end
 
-% figure;plot(x_ground_truth(:, 1))
-
 %% Initialization (Algorithm Step 1)
-x = randn(n, J); % 1 x J matrix, images to reconstruct
+x = randn(n, J); % n x J matrix, images to reconstruct
 alpha = ones(J, 1); % J x 1 matrix, alpha hyperparameters, noise precision
-beta = ones(J, K); % J x 1 matrix, beta hyperparameters, 
+beta = ones(J, K); % J x K matrix, beta hyperparameters, 
                   % intra-image regularization weight
-gamma = ones(J - 1, n); % J-1 x 1 matrix, gamma hyperparameters, 
+gamma = ones(J - 1, n); % J-1 x n matrix, gamma hyperparameters, 
                        %  NOTE: gamma is a coupling weight between 
                        %  image x{j} and x{j+1}, so it must be a 
-                       %  J-1 x 1 matrix.
-max_iter = 10^3; % Maximum number of loop iterations                     
+                       %  J-1 x n matrix.                  
 %% Algorithmic Iterations (All Remaining Steps)
 M = zeros(J, 1);
 for j = 1:J
     M(j) = length(y(:, j));
 end
 
-for l = 1:max_iter
+for l = 1:max_iterations
     x_old = x;
 
     % -- alpha update
@@ -118,30 +115,38 @@ for l = 1:max_iter
         % solution of x ended
 
     end
-
     % terminate loop if absolute and relative change condition is met
     % we compute the average absolute and relative change between two subsequent image
     % sequences
-    
-    absolute_change_matrix(:, :) = x(:,:) - x_old(:, :);
-    absolute_change_norm_sum = 0;
-    relative_change_norm_sum = 0;
-    for j = 1:J
-        abs_change_norm = norm(absolute_change_matrix(:, j), 2);
-        absolute_change_norm_sum = absolute_change_norm_sum + abs_change_norm;
-        relative_change_norm_sum = absolute_change_norm_sum + abs_change_norm/norm(x(:, j), 2);
-    end
-    average_absolute_change = absolute_change_norm_sum/(J-1);
-    average_relative_change = relative_change_norm_sum/(J-1);
+    difference = x - x_old;
+    absolute_change_norms = vecnorm(difference, 2, 1);
+    relative_change_norms = absolute_change_norms ./ vecnorm(x, 2, 1);
 
-    if average_absolute_change < 10^(-3) && average_relative_change < 10^(-3)
+    average_absolute_change = sum(absolute_change_norms) / J;
+    average_relative_change = sum(relative_change_norms) / J;
+
+    if average_absolute_change < max_difference && average_relative_change < max_difference
         break
     end
 end
 
+%% Generating Visualizations
 figure;
-plot(x(:, 1)); 
+plot(x(:, 1)); % plotting the first column vector
+
 hold on;
-plot(x_ground_truth(:, 1)); 
+
+plot(x_ground_truth(:, 1)); % plotting the first column vector
 hold off;
-legend('Prediction','Actual');
+legend('Prediction','Ground Truth');
+
+% Side-By-Side Visualizations
+figure;
+plot(x_ground_truth(:, 1));
+legend('Ground Truth')
+
+hold on;
+
+figure;
+plot(x(:, 1));
+legend('Prediction');
