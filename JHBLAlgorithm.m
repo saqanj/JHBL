@@ -15,7 +15,7 @@ end
 
 %% Defining Important Variables
 J = 10; % Num. Images
-n = 25; % Value of n for nXn Dimension
+n = 4; % Value of n for nXn Dimension
 max_iterations = 10^3; % For algorithm stopping condition.
 max_difference = 10^(-3); % For algorithm stopping condition.
 
