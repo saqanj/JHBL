@@ -1,7 +1,6 @@
 | Week | Activity Log |
 |:----------:|:----------:|
-| Week 1   | Classes on Regularization, Least Squares and Introduction to Inverse Problems 
-              Class on Introduction to Probability|
+| Week 1   | Classes on Regularization, Least Squares and Introduction to Inverse Problems and Introduction to Probability|
 | Week 2   | Classes on statistics and random variables, Statistical Inversion Theory, Prior Models|
 | Week 3   | Discussion of JHBL Paper
               Class on Monte Carlo Markov Chain and Metropolis Hastings |
