@@ -66,7 +66,7 @@ for j = 1:J
         x_ground_truth(:, j) = curr_truth_j; 
         noise = noise_mean + noise_sd .* randn(noise_dimension, 1);
         y(:, j) = F * curr_truth_j + noise;
-        idx_pool(end-1:end) = mod(idx_pool(end-1:end), n) + 1;
+        %idx_pool(end-1:end) = mod(idx_pool(end-1:end), n) + 1;
     end
 end
 
