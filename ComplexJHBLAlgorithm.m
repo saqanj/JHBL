@@ -1,10 +1,11 @@
-%% JHBL (Joint Hierarchical Bayesian Learning) Algorithm
+%% JHBL (Joint Hierarchical Bayesian Learning) Algorithm (Supports 1-D Complex-Valued Data)
 % Based on Sequential Image Recovery Using Joint Hierarchical Bayesian
-% Learning (Xiao & Glaubitz 2023)
+% Learning (Xiao & Glaubitz 2023) and Complex-Valued Signal Recovery Using
+% a Generalized Bayesian LASSO (Green, Lindbloom, & Gelb 2025)
 % By: Shamsher Tamang & Saqlain Anjum
 
 %% Defining 1-D or 2-D Use Case
-is_2D = false;
+is_2D = false; % NOTE: ONLY HAVE 1-D SUPPORT FOR NOW!!!
 while true
     response = input('Working in 2-D (1) or 1-D (0)? ');
     if response == 0 || response == 1
@@ -14,8 +15,8 @@ while true
 end
 
 %% Defining Important Variables
-J = 10; % Num. Images
-n = 4; % Value of n for nXn Dimension
+J = 5; % Num. Images
+n = 50; % Value of n for nXn Dimension
 max_iterations = 10^3; % For algorithm stopping condition.
 max_difference = 10^(-3); % For algorithm stopping condition.
 
@@ -61,12 +62,14 @@ for j = 1:J
         noise = noise_mean + noise_sd .* randn(noise_dimension, 1);
         y(:, j) = F * curr_truth_j(:) + noise;
     else
-        curr_truth_j = zeros(n, 1);
-        curr_truth_j(idx_pool) = 1;
-        x_ground_truth(:, j) = curr_truth_j; 
+        x_ground_truth(:,1) = [ones(10,1); 2*ones(20,1); -1*ones(20,1)]; % eacj os a 50x1 col. vector, first 10 entries are 1, next 20 are 2, etc.
+        x_ground_truth(:,2) = [zeros(15,1); 3*ones(10,1); -2*ones(25,1)];
+        x_ground_truth(:,3) = [1*ones(25,1); -1*ones(25,1)];
+        x_ground_truth(:,4) = [1.5*ones(5,1); 0*ones(20,1); 2*ones(25,1)];
+        x_ground_truth(:,5) = [-1*ones(10,1); 0.5*ones(20,1); -0.5*ones(20,1)];
+
         noise = noise_mean + noise_sd .* randn(noise_dimension, 1);
-        y(:, j) = F * curr_truth_j + noise;
-        idx_pool(end-1:end) = mod(idx_pool(end-1:end), n) + 1;
+        y(:, j) = F * x_ground_truth(:, j) + noise;
     end
 end
 
@@ -154,11 +157,11 @@ if is_2D
     figure; imshow(gt_reshaped, []); title('Ground Truth Image 1');
 else
     figure;
-    plot(x(:, 1)); % plotting the first column vector
+    plot(x(:, 1), 'LineWidth', 1.5); % plotting the first column vector
 
     hold on;
 
-    plot(x_ground_truth(:, 1)); % plotting the first column vector
+    plot(x_ground_truth(:, 1), 'LineWidth', 1.5); % plotting the first column vector
     hold off;
     legend('Prediction','Ground Truth');
 
