@@ -1,4 +1,3 @@
-tic
 %% JHBL (Joint Hierarchical Bayesian Learning) Algorithm (Supports 1-D Complex-Valued Data)
 % Based on Sequential Image Recovery Using Joint Hierarchical Bayesian
 % Learning (Xiao & Glaubitz 2023) and Complex-Valued Signal Recovery Using
@@ -108,7 +107,7 @@ for l = 1:max_iterations
 
     % -- gamma update
     for j = 2:J
-        gamma(j-1, :) = (eta_gamma) ./ (theta_gamma + (x(:, j-1) - x(:, j)).^2);
+        gamma(j-1, :) = (eta_gamma - 0.5) ./ (theta_gamma + 0.5 * (x(:, j-1) - x(:, j)).^2);
     end
 
     % -- x update
@@ -177,5 +176,3 @@ else
     plot(x(:, 1));
     legend('Prediction');
 end
-
-toc
