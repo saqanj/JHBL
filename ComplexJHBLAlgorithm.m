@@ -1,12 +1,12 @@
 tic
-%% JHBL (Joint Hierarchical Bayesian Learning) Algorithm (Supports 1-D Complex-Valued Data)
+%% JHBL (Joint Hierarchical Bayesian Learning) Algorithm
 % Based on Sequential Image Recovery Using Joint Hierarchical Bayesian
 % Learning (Xiao & Glaubitz 2023) and Complex-Valued Signal Recovery Using
 % a Generalized Bayesian LASSO (Green, Lindbloom, & Gelb 2025)
 % By: Shamsher Tamang & Saqlain Anjum
 
 %% Defining 1-D or 2-D Use Case
-is_2D = false; % NOTE: ONLY HAVE 1-D SUPPORT FOR NOW!!!
+is_2D = false;
 while true
     response = input('Working in 2-D (1) or 1-D (0)? ');
     if response == 0 || response == 1
@@ -34,17 +34,17 @@ theta_gamma = theta_beta;
 if is_2D
     R = create_tv_operator(n);
     K = size(R, 1);
-    m = n      % for square images
-    F = @(x) fft2(x)/sqrt(n*m)
-    FH = @(x) ifft2(x)*sqrt(n*m)
+    m = n;      % for square images
+    F = @(x) fft2(x)/sqrt(n*m);
+    FH = @(x) ifft2(x)*sqrt(n*m);
     y = zeros(n^2,J);
     x_ground_truth = zeros(n, n, J);
     noise_dimension = n^2;
 else
     R = eye(n);
     K = n;
-    F = @(x) fft(x)/sqrt(n)
-    FH = @(x) ifft(x)*sqrt(n)
+    F = @(x) fft(x)/sqrt(n);
+    FH = @(x) ifft(x)*sqrt(n);
     y = zeros(n, J);
     x_ground_truth = zeros(n, J);
     noise_dimension = n;
@@ -181,5 +181,4 @@ else
     plot(x(:, 1));
     legend('Prediction');
 end
-
 toc
