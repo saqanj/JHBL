@@ -162,23 +162,23 @@ if is_2D
     figure; imshow(gt_reshaped, []); title('Ground Truth Image 1');
 else
     figure;
-    plot(x(:, 1), 'LineWidth', 1.5); % plotting the first column vector
+    plot(real(x(:, 1)), 'LineWidth', 1.5); % plotting the first column vector
 
     hold on;
 
-    plot(x_ground_truth(:, 1), 'LineWidth', 1.5); % plotting the first column vector
+    plot(real(x_ground_truth(:, 1)), 'LineWidth', 1.5); % plotting the first column vector
     hold off;
     legend('Prediction','Ground Truth');
 
     % Side-By-Side Visualizations
     figure;
-    plot(x_ground_truth(:, 1));
+    plot(real(x_ground_truth(:, 1)));
     legend('Ground Truth')
 
     hold on;
 
     figure;
-    plot(x(:, 1));
+    plot(real(x(:, 1)));
     legend('Prediction');
 end
 toc
