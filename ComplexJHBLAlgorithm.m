@@ -34,15 +34,18 @@ theta_gamma = theta_beta;
 if is_2D
     R = create_tv_operator(n);
     K = size(R, 1);
-    F = speye(n^2);
+    m = n      % for square images
+    F = @(x) fft2(x)/sqrt(n*m)
+    FH = @(x) ifft2(x)*sqrt(n*m)
     y = zeros(n^2,J);
     x_ground_truth = zeros(n, n, J);
     noise_dimension = n^2;
 else
     R = eye(n);
     K = n;
-    F = eye(n);
-    y = zeros(n,J);
+    F = @(x) fft(x)/sqrt(n)
+    FH = @(x) ifft(x)*sqrt(n)
+    y = zeros(n, J);
     x_ground_truth = zeros(n, J);
     noise_dimension = n;
 end
@@ -61,7 +64,7 @@ for j = 1:J
         curr_truth_j(lin_indices) = 1; 
         x_ground_truth(:, :, j) = curr_truth_j; 
         noise = noise_mean + noise_sd .* randn(noise_dimension, 1);
-        y(:, j) = F * curr_truth_j(:) + noise;
+        y(:, j) = F(curr_truth_j(:)) + noise;
     else
         x_ground_truth(:,1) = [ones(10,1); 2*ones(20,1); -1*ones(20,1)]; % eacj os a 50x1 col. vector, first 10 entries are 1, next 20 are 2, etc.
         x_ground_truth(:,2) = [zeros(15,1); 3*ones(10,1); -2*ones(25,1)];
@@ -70,7 +73,7 @@ for j = 1:J
         x_ground_truth(:,5) = [-1*ones(10,1); 0.5*ones(20,1); -0.5*ones(20,1)];
 
         noise = noise_mean + noise_sd .* randn(noise_dimension, 1);
-        y(:, j) = F * x_ground_truth(:, j) + noise;
+        y(:, j) = F(x_ground_truth(:, j)) + noise;
     end
 end
 
@@ -97,7 +100,7 @@ for l = 1:max_iterations
 
     % -- alpha update
     for j = 1:J
-        alpha(j, :) = (eta_alpha + M(j) - 1) / (theta_alpha + norm(F * x(:, j) - y(:, j))^2);
+        alpha(j, :) = (eta_alpha + M(j) - 1) / (theta_alpha + norm(F(x(:, j)) - y(:, j))^2);
     end
 
     % -- beta update
@@ -125,8 +128,8 @@ for l = 1:max_iterations
         end
 
         B_j = diag(beta(j, :));
-        G_j = alpha(j, :)*(F')*F + (R')*B_j*R + change_mask_for_G;
-        b_j = alpha(j, :)*(F')*y(:, j) + change_mask_term_for_b;
+        G_j = alpha(j, :)*(FH(F(1))) + (R')*B_j*R + change_mask_for_G;
+        b_j = alpha(j, :)*(FH(y(:, j))) + change_mask_term_for_b;
 
         r = b_j - G_j * x(:, j);
         for i = 1:5

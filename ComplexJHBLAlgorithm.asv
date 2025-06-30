@@ -1,3 +1,4 @@
+tic
 %% JHBL (Joint Hierarchical Bayesian Learning) Algorithm (Supports 1-D Complex-Valued Data)
 % Based on Sequential Image Recovery Using Joint Hierarchical Bayesian
 % Learning (Xiao & Glaubitz 2023) and Complex-Valued Signal Recovery Using
@@ -33,15 +34,18 @@ theta_gamma = theta_beta;
 if is_2D
     R = create_tv_operator(n);
     K = size(R, 1);
-    F = speye(n^2);
+    m = n      % for square images
+    F = @(x) fft2(x)/sqrt(n*m)
+    FH = @(x) ifft2(x)*sqrt(n*m)
     y = zeros(n^2,J);
     x_ground_truth = zeros(n, n, J);
     noise_dimension = n^2;
 else
     R = eye(n);
     K = n;
-    F = eye(n);
-    y = zeros(n,J);
+    F = @(x) fft(x)/sqrt(n*m)
+    FH = @(x) ifft(x)*sqrt(n*m)
+    y = zeros(n, J);
     x_ground_truth = zeros(n, J);
     noise_dimension = n;
 end
@@ -69,7 +73,7 @@ for j = 1:J
         x_ground_truth(:,5) = [-1*ones(10,1); 0.5*ones(20,1); -0.5*ones(20,1)];
 
         noise = noise_mean + noise_sd .* randn(noise_dimension, 1);
-        y(:, j) = F * x_ground_truth(:, j) + noise;
+        y(:, j) = F(x_ground_truth(:, j)) + noise;
     end
 end
 
@@ -107,7 +111,7 @@ for l = 1:max_iterations
 
     % -- gamma update
     for j = 2:J
-        gamma(j-1, :) = (eta_gamma - 0.5) ./ (theta_gamma + 0.5 * (x(:, j-1) - x(:, j)).^2);
+        gamma(j-1, :) = (eta_gamma) ./ (theta_gamma + (x(:, j-1) - x(:, j)).^2);
     end
 
     % -- x update
@@ -176,3 +180,5 @@ else
     plot(x(:, 1));
     legend('Prediction');
 end
+
+toc
