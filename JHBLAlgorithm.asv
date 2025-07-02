@@ -24,17 +24,16 @@ max_difference = 10^(-3); % For algorithm stopping condition.
 
 %% Defining Equation Hyperparameters
 eta_alpha = 1;
-eta_beta = 1;
+eta_beta = 3; %1;
 eta_gamma = 2;
 
 theta_alpha = 10^-3;
-theta_beta = theta_alpha;
+theta_beta = 10^-5; % theta_alpha;
 theta_gamma = theta_beta;
 
 %% Defining General Linear Transforms, Forward Operator, Data
 if is_2D
     R = create_tv_operator(n);
-    R = eye(n^2, n^2)
     K = size(R, 1);
     F = speye(n^2);
     y = zeros(n^2,J);
