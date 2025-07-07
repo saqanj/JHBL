@@ -33,9 +33,9 @@ theta_gamma = theta_beta;
 
 %% Defining General Linear Transforms, Forward Operator, Data
 if is_2D
-    R = create_tv_operator(n);
+    % R = create_tv_operator(n);
     % R = create_classical_tv_operator(n);
-    % R = eye(n^2, n^2)
+    R = eye(n^2, n^2)
     K = size(R, 1);
     F = speye(n^2);
     y = zeros(n^2,J);
