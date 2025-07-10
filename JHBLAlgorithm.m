@@ -18,7 +18,7 @@ end
 
 %% Defining Important Variables
 J = 30; % Num. Images
-n = 30; % Value of n for nXn Dimension
+n = 10; % Value of n for nXn Dimension
 max_iterations = 10^3; % For algorithm stopping condition.
 max_difference = 10^(-3); % For algorithm stopping condition.
 
@@ -35,7 +35,7 @@ theta_gamma = theta_beta;
 if is_2D
     % R = create_tv_operator(n);
     % R = create_classical_tv_operator(n);
-    R = eye(n^2, n^2)
+    R = eye(n^2, n^2);
     K = size(R, 1);
     F = speye(n^2);
     y = zeros(n^2,J);

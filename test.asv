@@ -60,8 +60,6 @@ mag(50:100, 10:50)  = randi([0, 2]);
 mag(10:50, 60:100)  = randi([0, 2]);
 mag(16:25, 6:25) = randi([0, 2]);
 
-mag = mag + 0.5;
-
 for j = 1:J
     if is_2D
         [X, Y] = meshgrid(1:n, 1:n);
@@ -101,9 +99,9 @@ for l = 1:max_iterations
     end
 
     for j = 1:J
-        Theta_j = x(:, j) ./ (abs(x(:, j))); % phase calculation
+        Theta_j = x(:, j) ./ (abs(x(:, j)) .* speye(length(x(:, j)))); % phase calculation
         % apply TV only to magnitude
-        LTheta_j = R .* Theta_j';          
+        LTheta_j = R * diag(conj(Theta_j));          
 
         R_x = LTheta_j * x(:, j);
         beta(j, :) = eta_beta ./ (theta_beta + abs(R_x).^2);

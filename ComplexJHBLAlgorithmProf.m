@@ -1,3 +1,4 @@
+clear all;
 rng(4)
 
 tic
@@ -31,7 +32,6 @@ theta_beta = theta_alpha;
 theta_gamma = theta_beta;
 
 if is_2D
-    % R = create_tv_operator(n);
     R = sparse_operator(n,n,1);
     K = size(R, 1);
     m = n;
@@ -41,11 +41,9 @@ if is_2D
     x_ground_truth = complex(zeros(n, m, J));
     noise_dimension = n*m;
 else
-    % R = eye(n);
-    e = ones(n, 1)
-    R = spdiags([e -e], [0, 1], n-1, n) 
-    % K = n;
-    K = size(R, 1)
+    e = ones(n, 1);
+    R = spdiags([e -e], [0, 1], n-1, n);
+    K = size(R, 1);
     F = @(x) fft(x)/sqrt(n);
     FH = @(x) ifft(x)*sqrt(n);
     y = zeros(n, J);
@@ -57,17 +55,14 @@ sparsity_level = 8;
 noise_mean = 0;
 noise_sd = 0.1;
 
-mag(10:50, 10:50)   = randi([0, 2]);% + 0.1*randn();
-mag(50:100, 10:50)  = randi([0, 2]);% + 0.1*randn();
-mag(10:50, 60:100)  = randi([0, 2]);% + 0.1*randn();
-mag(16:25, 6:25) = randi([0, 2]);% + 0.1*randn();
+mag(10:50, 10:50)   = randi([0, 2]);
+mag(50:100, 10:50)  = randi([0, 2]);
+mag(10:50, 60:100)  = randi([0, 2]);
+mag(16:25, 6:25) = randi([0, 2]);
 
 for j = 1:J
     if is_2D
         % Piecewise-Constant Magnitude with Smooth Phase (2-D)
-
-        % mag(randi(n*n,25,1)) = 1;
-
         [X, Y] = meshgrid(1:n, 1:n);
         phase = (pi/10 * j) * sin(2*pi*X/n) .* cos(2*pi*Y/n);
 
@@ -97,8 +92,6 @@ else
     x = randn(n, J) + 1i * randn(n, J);
     gamma = ones(J - 1, n);
 end
-
-% x = reshape(x_ground_truth,[],J)+randn(n*n, J) + 1i * randn(n*n, J);
 
 alpha = ones(J, 1);
 beta = ones(J, K);
@@ -133,7 +126,6 @@ for l = 1:max_iterations
             change_term_b = gamma(j-1, :).' .* x(:, j-1) + gamma(j, :).' .* x(:, j+1);
         end
 
-        % B_j = diag(beta(j, :));
         G_j = @(x) alpha(j)*FH(F(x)) + R'*((beta(j,:).').*R)*x + change_mask_G.*x;
         b_j = alpha(j)*FH(y(:, j)) + change_term_b;
 
@@ -153,10 +145,6 @@ for l = 1:max_iterations
     if mean(abs_change) < max_difference && mean(rel_change) < max_difference
         break
     end
-
-    % if mod(l,20)==0
-    %     figure(10);imagesc(abs(reshape(x(:,1),n,m)));colorbar;pause(.1);drawnow
-    % end
 end
 
 %% Visualizations

@@ -17,8 +17,8 @@ end
 
 %% Parameters
 J = 5;
-n = 10;
-max_iterations = 1e3;
+n = 100;
+max_iterations = 1e4;
 max_difference = 1e-3;
 
 eta_alpha = 1;
@@ -39,10 +39,10 @@ if is_2D
     noise_dimension = n^2;
 else
     % R = eye(n);
-    e = ones(n, 1)
-    R = spdiags([e -e], [0, 1], n-1, n) 
+    e = ones(n, 1);
+    R = spdiags([e -e], [0, 1], n-1, n);
     % K = n;
-    K = size(R, 1)
+    K = size(R, 1);
     F = @(x) fft(x)/sqrt(n);
     FH = @(x) ifft(x)*sqrt(n);
     y = zeros(n, J);
@@ -73,8 +73,8 @@ for j = 1:J
         y(:, j) = F(curr_truth_j(:)) + noise;
     else
         % Piecewise-Constant Magnitude with Smooth Phase (1-D)
-        mag = [ones(3,1); 2*ones(3,1); -1*ones(4,1)];
-        mag = mag + 0.1 * randn(n,1);
+        mag = [ones(30,1); 2*ones(30,1); -1*ones(40,1)];
+        %mag = mag + 0.1 * randn(n,1);
 
         phase = linspace(0, pi/2 + 0.05*j, n)';
 
