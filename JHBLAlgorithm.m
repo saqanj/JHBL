@@ -1,4 +1,4 @@
-rng(1234);
+rng(123);
 
 tic
 %% JHBL (Joint Hierarchical Bayesian Learning) Algorithm
@@ -18,7 +18,7 @@ end
 
 %% Defining Important Variables
 J = 30; % Num. Images
-n = 10; % Value of n for nXn Dimension
+n = 50; % Value of n for nXn Dimension % this is dfiferentet
 max_iterations = 10^3; % For algorithm stopping condition.
 max_difference = 10^(-3); % For algorithm stopping condition.
 
@@ -27,30 +27,35 @@ eta_alpha = 1;
 eta_beta = 1;
 eta_gamma = 2;
 
-theta_alpha = 10^-3;
+theta_alpha = 10^(-3);
 theta_beta = theta_alpha;
 theta_gamma = theta_beta;
 
 %% Defining General Linear Transforms, Forward Operator, Data
 if is_2D
-    % R = create_tv_operator(n);
+    % R with identity not working as of now
+    R = create_tv_operator(n);
     % R = create_classical_tv_operator(n);
-    R = eye(n^2, n^2);
+    % R = speye(n^2, n^2);
     K = size(R, 1);
-    F = speye(n^2);
+    % F = speye(n^2);
+    F = @(x) x;
+    FT = @(x) x;
     y = zeros(n^2,J);
     x_ground_truth = zeros(n, n, J);
     noise_dimension = n^2;
 else
     R = eye(n);
     K = n;
-    F = eye(n);
+    % F = eye(n);
+    F = @(x) x;
+    FT = @(x) x;
     y = zeros(n,J);
     x_ground_truth = zeros(n, J);
     noise_dimension = n;
 end
 
-sparsity_level = 10; % # of non-zero elements
+sparsity_level = 9; % # of non-zero elements
 noise_mean = 0;
 noise_sd = 0.1;
 
@@ -64,13 +69,13 @@ for j = 1:J
         curr_truth_j(lin_indices) = 1; 
         x_ground_truth(:, :, j) = curr_truth_j; 
         noise = noise_mean + noise_sd .* randn(noise_dimension, 1);
-        y(:, j) = F * curr_truth_j(:) + noise;
+        y(:, j) = F(curr_truth_j(:)) + noise;
     else
         curr_truth_j = zeros(n, 1);
         curr_truth_j(idx_pool) = 1;
         x_ground_truth(:, j) = curr_truth_j; 
         noise = noise_mean + noise_sd .* randn(noise_dimension, 1);
-        y(:, j) = F * curr_truth_j + noise;
+        y(:, j) = F(curr_truth_j) + noise;
         idx_pool(end-1:end) = mod(idx_pool(end-1:end), n) + 1;
     end
 end
@@ -98,12 +103,12 @@ for l = 1:max_iterations
 
     % -- alpha update
     for j = 1:J
-        alpha(j, :) = (eta_alpha + M(j)/2 - 1) / (theta_alpha + 0.5 * norm(F * x(:, j) - y(:, j))^2);
+        alpha(j, :) = (eta_alpha + M(j)/2 - 1) / (theta_alpha + 0.5 * norm(F(x(:, j)) - y(:, j))^2);
     end
 
     % -- beta update
     for j = 1:J
-        R_x = R * x(:, j); % K x 1
+        R_x = R*x(:, j); % K x 1
         beta(j, :) = (eta_beta - 0.5) ./ (theta_beta + 0.5 * (R_x(:)).^2);
     end
 
@@ -115,23 +120,22 @@ for l = 1:max_iterations
     % -- x update
     for j = 1:J
         if j == 1
-            change_mask_for_G = diag(gamma(j, :));
-            change_mask_term_for_b = diag(gamma(j, :)) * x(:, j+1);
+            change_mask_G = gamma(j, :).';
+            change_mask_term_for_b = gamma(j, :).' .* x(:, j+1);
         elseif j == J
-            change_mask_for_G = diag(gamma(j-1, :));
-            change_mask_term_for_b = diag(gamma(j-1, :)) * x(:, j-1);
+            change_mask_for_G = gamma(j-1, :).';
+            change_mask_term_for_b = gamma(j-1, :).' .* x(:, j-1);
         else
-            change_mask_for_G = diag(gamma(j-1, :)) + diag(gamma(j, :));
-            change_mask_term_for_b = diag(gamma(j-1, :)) * x(:, j-1) + diag(gamma(j, :)) * x(:, j+1);
+            change_mask_for_G = gamma(j-1, :).' + gamma(j, :).';
+            change_mask_term_for_b = gamma(j-1, :).' .* x(:, j-1) + gamma(j, :).' .* x(:, j+1);
         end
 
-        B_j = diag(beta(j, :));
-        G_j = alpha(j, :)*(F')*F + (R')*B_j*R + change_mask_for_G;
-        b_j = alpha(j, :)*(F')*y(:, j) + change_mask_term_for_b;
+        G_j = @(x) alpha(j)*FT(F(x)) + (R')*((beta(j, :).').*R)*x + change_mask_G.*x;
+        b_j = alpha(j, :)*(F(y(:, j))) + change_mask_term_for_b;
 
-        r = b_j - G_j * x(:, j);
+        r = b_j - G_j(x(:, j));
         for i = 1:5
-            G_r = G_j * r;
+            G_r = G_j(r);
             step_size = (r') * r / (r' * G_r);
             x(:, j) = x(:, j) + step_size * r;
             r = r - step_size * G_r;
