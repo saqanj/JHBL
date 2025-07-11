@@ -14,16 +14,23 @@ E = [ ...
 J = 3;
 n = 256;              % image resolution
 deltaTheta = 20;       % rotation step per image
-sigma = 20;           % for phase smoothness
-epsMag = 10^(-3);     % for keeping image values > 0 
+sigma = 25;           % for phase smoothness
+epsMag = 10^(-3);     % for keeping image values > 0
+alpha = 0.25;
 
+mag   = cell(1,J);
+phase = cell(1,J);
 
+phi = smoothPhase(n, sigma, 1);
 for jj = 1:J
     % mag{jj} = imrotate(phantom(E, n), theta, 'bicubic', 'crop') + epsMag;
     mag{jj} = abs(phantom(E, n)) + epsMag;
     E(3, 6) = E(3, 6) + deltaTheta;
     E(4, 6) = E(4, 6) - deltaTheta/2;
-    phase{jj}      = smoothPhase(n, sigma, jj);
+    
+    phase_diff = smoothPhase(n, sigma, jj + 1);
+    phi = atan2( sin(phi + alpha*phase_diff),  cos(phi + alpha*phase_diff) );
+    phase{jj} = phi;
 
     I{jj}          = mag{jj} .* exp(1i * phase{jj});
 end
