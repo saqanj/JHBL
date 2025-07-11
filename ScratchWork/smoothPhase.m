@@ -8,7 +8,7 @@ function phi = smoothPhase(n, sigma, seed)
 %
 if nargin>2, rng(seed); end
 phi = randn(n);                     % white noise
-h   = fspecial('gaussian', [n n], sigma);
-phi = imfilter(phi, h, 'replicate');% Gaussian blur
+kernel   = fspecial('gaussian', [n n], sigma);
+phi = imfilter(phi, kernel, 'replicate');% Gaussian blur
 phi = pi * phi / max(abs(phi(:)));  % scale to (-pi,pi]
 end
