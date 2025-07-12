@@ -1,3 +1,6 @@
+clear all;
+rng(4)
+
 tic
 %% Complex-Valued JHBL (Joint Hierarchical Bayesian Learning) Algorithm
 % Based on Sequential Image Recovery Using Joint Hierarchical Bayesian
@@ -16,7 +19,7 @@ while true
 end
 
 %% Parameters
-J = 5;
+J = 3;
 n = 100;
 max_iterations = 1e4;
 max_difference = 1e-3;
@@ -29,19 +32,17 @@ theta_beta = theta_alpha;
 theta_gamma = theta_beta;
 
 if is_2D
-    R = create_tv_operator(n);
+    R = sparse_operator(n,n,1);
     K = size(R, 1);
     m = n;
-    F = @(x) fft2(x)/sqrt(n*m);
-    FH = @(x) ifft2(x)*sqrt(n*m);
+    F = @(x) reshape(fft2(reshape(x,n,m))/sqrt(n*m),n*m,1);
+    FH = @(x) reshape(ifft2(reshape(x,n,m))*sqrt(n*m),n*m,1);
     y = zeros(n^2, J);
-    x_ground_truth = complex(zeros(n, n, J));
-    noise_dimension = n^2;
+    x_ground_truth = complex(zeros(n, m, J));
+    noise_dimension = n*m;
 else
-    % R = eye(n);
     e = ones(n, 1);
     R = spdiags([e -e], [0, 1], n-1, n);
-    % K = n;
     K = size(R, 1);
     F = @(x) fft(x)/sqrt(n);
     FH = @(x) ifft(x)*sqrt(n);
@@ -54,33 +55,26 @@ sparsity_level = 8;
 noise_mean = 0;
 noise_sd = 0.1;
 
+mag(10:50, 10:50)   = randi([0, 2]);
+mag(50:100, 10:50)  = randi([0, 2]);
+mag(10:50, 60:100)  = randi([0, 2]);
+mag(16:25, 6:25) = randi([0, 2]);
+
+mag = mag + 0.5;
+
 for j = 1:J
     if is_2D
-        % Piecewise-Constant Magnitude with Smooth Phase (2-D)
-        mag = zeros(n, n);
-        mag(1:5, 1:5)   = randi([-2, 2]) + 0.1*randn();
-        mag(6:10, 1:5)  = randi([-2, 2]) + 0.1*randn();
-        mag(1:5, 6:10)  = randi([-2, 2]) + 0.1*randn();
-        mag(6:10, 6:10) = randi([-2, 2]) + 0.1*randn();
-
         [X, Y] = meshgrid(1:n, 1:n);
         phase = (pi/10 * j) * sin(2*pi*X/n) .* cos(2*pi*Y/n);
-
         curr_truth_j = mag .* exp(1i * phase);
         x_ground_truth(:, :, j) = curr_truth_j;
-
-        noise = noise_mean + noise_sd * randn(noise_dimension, 1);
+        noise = noise_mean + noise_sd/sqrt(2) * (randn(noise_dimension, 1)+1i*randn(noise_dimension,1));
         y(:, j) = F(curr_truth_j(:)) + noise;
     else
-        % Piecewise-Constant Magnitude with Smooth Phase (1-D)
-        mag = [ones(30,1); 2*ones(30,1); -1*ones(40,1)];
-        %mag = mag + 0.1 * randn(n,1);
-
+        mag = [ones(30,1); 2*ones(30+j,1); 1.5*ones(40-j,1)];
         phase = linspace(0, pi/2 + 0.05*j, n)';
-
         x_ground_truth(:, j) = mag .* exp(1i * phase);
-
-        noise = noise_mean + noise_sd * randn(noise_dimension, 1);
+        noise = noise_mean + noise_sd/sqrt(2) * (randn(noise_dimension, 1)+1i*randn(noise_dimension, 1));
         y(:, j) = F(x_ground_truth(:, j)) + noise;
     end
 end
@@ -103,11 +97,15 @@ for l = 1:max_iterations
     x_old = x;
 
     for j = 1:J
-        alpha(j) = (eta_alpha + M(j) - 1) / (theta_alpha + norm(F(x(:, j)) - y(:, j))^2);
+        alpha(j) = (eta_alpha + M(j) - 1) / (theta_alpha + norm(abs(F(x(:, j)) - y(:, j)),2)^2);
     end
 
     for j = 1:J
-        R_x = R * x(:, j);
+        Theta_j = x(:, j) ./ (abs(x(:, j))); % phase calculation
+        % apply TV only to magnitude
+        LTheta_j = R .* Theta_j';          
+
+        R_x = LTheta_j * x(:, j);
         beta(j, :) = eta_beta ./ (theta_beta + abs(R_x).^2);
     end
 
@@ -117,23 +115,22 @@ for l = 1:max_iterations
 
     for j = 1:J
         if j == 1
-            change_mask_G = diag(gamma(j, :));
-            change_term_b = gamma(j, :)' .* x(:, j+1);
+            change_mask_G = gamma(j, :).';
+            change_term_b = gamma(j, :).' .* x(:, j+1);
         elseif j == J
-            change_mask_G = diag(gamma(j-1, :));
+            change_mask_G = gamma(j-1, :).';
             change_term_b = gamma(j-1, :)' .* x(:, j-1);
         else
-            change_mask_G = diag(gamma(j-1, :) + gamma(j, :));
-            change_term_b = gamma(j-1, :)' .* x(:, j-1) + gamma(j, :)' .* x(:, j+1);
+            change_mask_G = gamma(j-1, :).' + gamma(j, :).';
+            change_term_b = gamma(j-1, :).' .* x(:, j-1) + gamma(j, :).'.* x(:, j+1);
         end
 
-        B_j = diag(beta(j, :));
-        G_j = alpha(j)*FH(F(1)) + R'*B_j*R + change_mask_G;
+        G_j = @(x_var) alpha(j)*FH(F(x_var)) + LTheta_j' * (beta(j,:).' .* (LTheta_j * x_var)) + change_mask_G .* x_var;
         b_j = alpha(j)*FH(y(:, j)) + change_term_b;
 
-        r = b_j - G_j * x(:, j);
+        r = b_j - G_j(x(:, j));
         for i = 1:5
-            G_r = G_j * r;
+            G_r = G_j(r);
             step_size = (r') * r / (r' * G_r);
             x(:, j) = x(:, j) + step_size * r;
             r = r - step_size * G_r;
