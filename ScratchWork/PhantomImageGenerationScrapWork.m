@@ -17,19 +17,24 @@ deltaTheta = 20;       % rotation step per image
 sigma = 25;           % for phase smoothness
 epsMag = 10^(-3);     % for keeping image values > 0
 alpha = 0.25;
+epsPhase = 10^(-3);        % phase error
+epsPhase_variation = 10^(-3);
+phase_indices_to_change = 0.5
 
 mag   = cell(1,J);
 phase = cell(1,J);
 
-phi = smoothPhase(n, sigma, 1);
+phi_without_noise = smoothPhase(n, sigma, 1);
 for jj = 1:J
-    % mag{jj} = imrotate(phantom(E, n), theta, 'bicubic', 'crop') + epsMag;
     mag{jj} = abs(phantom(E, n)) + epsMag;
     E(3, 6) = E(3, 6) + deltaTheta;
     E(4, 6) = E(4, 6) - deltaTheta/2;
     
-    phase_diff = smoothPhase(n, sigma, jj + 1);
-    phi = atan2( sin(phi + alpha*phase_diff),  cos(phi + alpha*phase_diff) );
+    r = randperm(n, ceil(phase_indices_to_change*n));
+    c = randperm(n, ceil(phase_indices_to_change*n));
+    phi = phi_without_noise;
+    phi(r, c) = phi(r, c) + epsPhase;
+    phi_without_noise = phi_without_noise + epsPhase_variation;
     phase{jj} = phi;
 
     I{jj}          = mag{jj} .* exp(1i * phase{jj});
@@ -37,7 +42,7 @@ end
 
 figure('Name','Synthetic SAR sequence','NumberTitle','off');
 for jj = 1:J
-    subplot(2,J,jj),     imshow(mag{jj},[]),   title(sprintf('Mag %d',jj));
+    subplot(2,J,jj),     imshow(mag{jj},[]),   title(sprintf('Magnitude %d',jj));
     subplot(2,J,J+jj),   imagesc(phase{jj}),   axis image off
     title(sprintf('Phase %d',jj)),            colormap(gray); colorbar
 end

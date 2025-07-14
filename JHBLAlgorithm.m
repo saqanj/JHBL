@@ -35,7 +35,7 @@ theta_gamma = theta_beta;
 if is_2D
     % R with identity not working as of now
     R = create_tv_operator(n);
-    % R = create_classical_tv_operator(n);
+    R = create_classical_tv_operator(n);
     % R = speye(n^2, n^2);
     K = size(R, 1);
     % F = speye(n^2);
