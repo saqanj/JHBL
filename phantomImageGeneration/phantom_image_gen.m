@@ -1,4 +1,6 @@
-function [mag, phase, II] = phantom_image_gen(J, n, deltaTheta, sigma, ...
+function [mag, phase, II] = phantom_image_gen(phaseType, ...
+    J, n, ...
+    deltaTheta, sigma, ...
     epsMag, epsPhase, epsPhase_variation, ...
     phase_indices_to_change, visualise)
 
@@ -58,8 +60,12 @@ mag   = zeros(npix,J);
 phase = zeros(npix,J);
 II    = zeros(npix,J);
 
-% smooth phase
-phi_without_noise = smoothPhase(n, sigma, 1);
+if strcmpi(phaseType,'sinosudol')
+    [phi, dphi] = sinosudolPhase(n);
+else
+    % smooth phase
+    phi_without_noise = smoothPhase(n, sigma, 1);
+end
 
 for jj = 1:J
     % magnitude -------------------------------------
@@ -69,16 +75,20 @@ for jj = 1:J
     E(4, 6) = E(4, 6) - deltaTheta/2;
     
     % phase -----------------------------------------
-    phi = phi_without_noise;
-    % selecting indices for small error 
-    num_of_idx = ceil(phase_indices_to_change*n);
-    r = randperm(n, num_of_idx);
-    c = randperm(n, num_of_idx);
-    phi(r, c) = phi(r, c) + epsPhase;
-    phase(:, jj) = phi(:);
-    % vary phi for next round
-    phi_without_noise = phi_without_noise + epsPhase_variation;
-    
+    if strcmpi(phaseType,'sinosudol')
+        phi  = phi + dphi;
+    else
+        % smooth phase
+        phi = phi_without_noise;
+        % selecting indices for small error 
+        num_of_idx = ceil(phase_indices_to_change*n);
+        r = randperm(n, num_of_idx);
+        c = randperm(n, num_of_idx);
+        phi(r, c) = phi(r, c) + epsPhase;
+        % vary phi for next round
+        phi_without_noise = phi_without_noise + epsPhase_variation;
+    end
+    phase(:,jj) = phi(:);
 
     II(:, jj) = mag(:, jj) .* exp(1i * phase(:, jj));
 end

@@ -1,7 +1,9 @@
-[mag, phase, II] = phantom_image_gen(4, 256, 18, 25, 10^(-3), 10^(-3), 10^(-3), 0.25, 0);
-
-J = 4;
+J = 3;
 n = 256;
+
+[mag, phase, II] = phantom_image_gen('sinosudol', J, n, 18, 25, 10^(-3), 10^(-3), 10^(-3), 0.25, 0);
+
+
 figure('Name','Synthetic SAR sequence','NumberTitle','off');
 for jj = 1:J
     subplot(2,J,jj);
