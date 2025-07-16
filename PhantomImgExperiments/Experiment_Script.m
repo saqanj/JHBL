@@ -13,7 +13,7 @@ tic
 
 %% Parameters
 J = 3;
-n = 256;
+n = 100;
 max_iterations = 1e4;
 max_difference = 1e-3;
 sparsity_level = 8;
