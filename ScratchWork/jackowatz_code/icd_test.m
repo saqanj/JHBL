@@ -1,3 +1,4 @@
+% icd_test.m
 rng(4)
 
 tic
@@ -34,18 +35,29 @@ for j = 1:J
     y(:, j) = F(curr_truth_j(:)) + noise;
 end
 
+y_img = zeros(size(y));
+for j = 1:J
+    y_img(:, j) = FH(y(:, j));
+end
 
-x  = icd_batch(y, 7);        % 7×7 ML window (as used in the book's example)
-changeMap2 = reshape(x(:,2), n, n);   % visualise change to image 2
 
+% ---------------------------------
+% calling changeMap code (Jackowatz)
+changeMap  = icd_batch(y_img, 7);        % 7×7 ML window (as used in the book's example)
+% ---------------------------------
 
+changeMap_reshaped = reshape(changeMap(:,:), n, n, J-1);
+reconstruction_reshaped = x_ground_truth(:, :, :);
 
-
-x_reshaped = reshape(x(:, 1), n, n);
-gt_reshaped = x_ground_truth(:, :, 1);
-
-figure; imshow(abs(x_reshaped), []); title('Reconstructed Magnitude (Image 1)');
-figure; imshow(angle(x_reshaped), []); title('Reconstructed Phase (Image 1)');
-figure; imshow(abs(gt_reshaped), []); title('Ground Truth Magnitude (Image 1)');
-figure; imshow(angle(gt_reshaped), []); title('Ground Truth Phase (Image 1)');
+figMag = figure('Name','ChangeMap plot Jackowatz','NumberTitle','off');
+for jj = 1:J-1
+    subplot(2,J,jj);
+    imshow(changeMap_reshaped(:, :, jj), []);
+    title(sprintf('Change map from img %d to %d',jj, jj+1));
+end
+for jj = 1:J
+    subplot(2,J,J+jj);
+    imshow(abs(reconstruction_reshaped(:, :, jj)), []);
+    title(sprintf('Reconstruction img %d',jj));
+end
 toc

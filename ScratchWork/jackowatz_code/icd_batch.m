@@ -1,4 +1,4 @@
-function x = icd_batch(y,win)
+function changeMap = icd_batch(y,win)
 %ICD_BATCH  Vectorised interface for y (n²×J) → x (n²×J)
 %
 %   y   : n²×J matrix, y(:,j) is the j‑th n×n image (vectorised)
@@ -10,13 +10,11 @@ n      = round(sqrt(n2));
 if n*n ~= n2, error('Input y rows must be a perfect square (n²)'); end
 if nargin<2, win = 7; end
 
-% reshape reference once
-ref = reshape(y(:,1), n, n);
-
-x       = ones(n2, J, 'double');   % pre‑fill column 1 with ones
-for j = 2:J
-    img = reshape(y(:,j), n, n);
-    alpha = icd_ml_corr(ref, img, win);   % ICD map
-    x(:,j) = alpha(:);                    % re‑vectorise
+changeMap       = ones(n2, J-1, 'double');   % pre‑fill column 1 with ones
+for j = 1:J-1
+    ref = reshape(y(:,j), n, n);        % reshape reference to prev image
+    img = reshape(y(:,j+1), n, n);      % current image
+    gamma = icd_ml_corr(ref, img, win); % ICD map
+    changeMap(:,j) = gamma(:);          % re‑vectorise
 end
 end
