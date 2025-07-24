@@ -62,7 +62,9 @@ II    = zeros(npix,J);
 
 if strcmpi(phaseType,'sinosudol')
     [phi, dphi] = sinosudolPhase(n);
-else
+elseif strcmpi(phaseType,'blockySinosudol')
+    [blocky_phi] = blockySinosudolPhase(J, n);
+else 
     % smooth phase
     phi_without_noise = smoothPhase(n, sigma, 1);
 end
@@ -77,6 +79,8 @@ for jj = 1:J
     % phase -----------------------------------------
     if strcmpi(phaseType,'sinosudol')
         phi  = phi + dphi;
+    elseif strcmpi(phaseType,'blockySinosudol')
+        phi = reshape(blocky_phi(:, :, jj), n^2, 1);
     else
         % smooth phase
         phi = phi_without_noise;

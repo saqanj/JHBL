@@ -25,7 +25,7 @@ function [phi0, dPhi] = sinosudolPhase(n, amp, step)
 %       end
 
 % ---- defaults -----------------------------------------------------------
-if nargin < 2 || isempty(amp),  amp  = pi/10;   end
+if nargin < 2 || isempty(amp),  amp  = 3;   end
 if nargin < 3 || isempty(step), step = pi/200;  end
 
 % ---- build the spatial template ----------------------------------------
