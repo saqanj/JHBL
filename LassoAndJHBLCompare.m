@@ -181,6 +181,26 @@ else
     title('1D Phase Comparison');
 end
 
+% -----------Jackowatz part---------------
+if is_2D
+    changeMap  = icd_batch(x_lasso_reconstruct, 7);        % 7×7 ML window (as used in the book's example)
+    
+    changeMap_reshaped = reshape(changeMap(:,:), n, n, J-1);
+    reconstruction_reshaped = reshape(x_lasso_reconstruct(:, :), n, n, J);
+    
+    figchangeMap = figure('Name','ChangeMap plot Jackowatz','NumberTitle','off');
+    for jj = 1:J-1
+        subplot(2,J,jj);
+        imshow(changeMap_reshaped(:, :, jj), []);
+        title(sprintf('Change map from img %d to %d',jj, jj+1));
+    end
+    for jj = 1:J
+        subplot(2,J,J+jj);
+        imshow(abs(reconstruction_reshaped(:, :, jj)), []);
+        title(sprintf('Sample Reconstruction img %d',jj));
+    end
+end
+% ----jackowatz ends-----------------------
 
 %% Visualizations - Complex JHBL
 if is_2D
