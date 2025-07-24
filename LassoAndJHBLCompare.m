@@ -69,7 +69,7 @@ for j = 1:J
         y(:, j) = F(curr_truth_j(:)) + noise;
     else
         mag = [ones(30,1); 2*ones(30+j,1); 1.5*ones(40-j,1)];
-        phase = linspace(0, pi/2 + 0.05*j, n)';
+        phase = linspace(0, pi/2 + 0.05*j, n)'; % change to be a small localized area of change (tophat)
         x_ground_truth(:, j) = mag .* exp(1i * phase);
         noise = noise_mean + noise_sd/sqrt(2) * (randn(noise_dimension, 1)+1i*randn(noise_dimension, 1));
         y(:, j) = F(x_ground_truth(:, j)) + noise;
