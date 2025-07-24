@@ -62,11 +62,11 @@ mag = mag + 0.5;
 for j = 1:J
     if is_2D
         [X, Y] = meshgrid(1:n, 1:n);
-        % phase = ones(n, n) * pi/4;
-        % phase(31:40, :) = pi/2 + 0.1*1; % First tophat region 
-        % phase(41:50, :) = pi/2 + 0.1*2; % Second tophat region 
-        % phase(51:60, :) = pi/2 + 0.1*3; % Third tophat region 
-        phase = (pi/10 * j) * sin(2*pi*X/n) .* cos(2*pi*Y/n);
+         phase = ones(n, n) * pi/4;
+         phase(31:40, :) = pi/2 + 0.1*1; % First tophat region (rows 31 to 40)
+         phase(41:50, :) = pi/2 + 0.1*2; % Second tophat region (rows 41 to 50)
+         phase(51:60, :) = pi/2 + 0.1*3; % Third tophat region (rows 51 to 60)
+        %phase = (pi/10 * j) * sin(2*pi*X/n) .* cos(2*pi*Y/n);
         curr_truth_j = mag .* exp(1i * phase);
         x_ground_truth(:, :, j) = curr_truth_j;
         noise = noise_mean + noise_sd/sqrt(2) * (randn(noise_dimension, 1)+1i*randn(noise_dimension,1));
