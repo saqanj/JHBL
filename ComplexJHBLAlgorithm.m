@@ -100,20 +100,26 @@ for l = 1:max_iterations
         alpha(j) = (eta_alpha + M(j) - 1) / (theta_alpha + norm(abs(F(x(:, j)) - y(:, j)),2)^2);
     end
 
-    for j = 1:J
-        Theta_j = x(:, j) ./ (abs(x(:, j))); % phase calculation
-        % apply TV only to magnitude
-        LTheta_j = R .* Theta_j';          
-
-        R_x = LTheta_j * x(:, j);
-        beta(j, :) = eta_beta ./ (theta_beta + abs(R_x).^2);
-    end
+    % for j = 1:J
+    %     Theta_j = x(:, j) ./ (abs(x(:, j))); % phase calculation
+    %     % apply TV only to magnitude
+    %     LTheta_j = R .* Theta_j';          
+    % 
+    %     R_x = LTheta_j * x(:, j);
+    %     beta(j, :) = eta_beta ./ (theta_beta + abs(R_x).^2);
+    % end
 
     for j = 2:J
         gamma(j-1, :) = eta_gamma ./ (theta_gamma + abs(x(:, j-1) - x(:, j)).^2);
     end
 
     for j = 1:J
+        Theta_j = x(:, j) ./ (abs(x(:, j))); % phase calculation
+        % apply TV only to magnitude
+        LTheta_j = R .* Theta_j';
+        R_x = LTheta_j * x(:, j);
+        beta(j, :) = eta_beta ./ (theta_beta + abs(R_x).^2);
+
         if j == 1
             change_mask_G = gamma(j, :).';
             change_term_b = gamma(j, :).' .* x(:, j+1);
