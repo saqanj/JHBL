@@ -57,16 +57,25 @@ mag(50:100, 10:50)  = randi([0, 2]);
 mag(10:50, 60:100)  = randi([0, 2]);
 mag(16:25, 6:25) = randi([0, 2]);
 
-mag = mag + 0.5;
+real_mag = mag + 0.5;
 
 for j = 1:J
     if is_2D
+        mag = real_mag;
+        magChange = 1.5;
+        r = randi(n-8); % row
+        c = randi(n-8); % column
+        mag(r:r+8-1, c:c+8-1) = mag(r:r+8-1, c:c+8-1)+ magChange;
         [X, Y] = meshgrid(1:n, 1:n);
         % phase = ones(n, n) * pi/4;
         % phase(31:40, :) = pi/2 + 0.1*1; % First tophat region 
         % phase(41:50, :) = pi/2 + 0.1*2; % Second tophat region 
         % phase(51:60, :) = pi/2 + 0.1*3; % Third tophat region 
-        phase = (pi/10 * j) * sin(2*pi*X/n) .* cos(2*pi*Y/n);
+        phase = (pi/2) * sin(2*pi*X/n) .* cos(2*pi*Y/n);
+        r = randi(n-8); % row
+        c = randi(n-10); % column
+        phase(r:r+8-1, c:c+10-1) = magChange;
+
         curr_truth_j = mag .* exp(1i * phase);
         x_ground_truth(:, :, j) = curr_truth_j;
         noise = noise_mean + noise_sd/sqrt(2) * (randn(noise_dimension, 1)+1i*randn(noise_dimension,1));
@@ -160,20 +169,66 @@ end
 for l = 1:J
     x_lasso_reconstruct(:, l) = generalized_complex_lasso([], y(:, l), R, 0.1, 0.1, FH, 0);
 end
+%% Visualizations - Ground Truth
+if is_2D
+    gt_reshaped = x_ground_truth(:, :, :);
+    
+    figGroundTruth = figure('Name','GroundTruth','NumberTitle','off');
+    for jj = 1:J
+        subplot(2,J,jj);
+        imshow(abs(gt_reshaped(:, :, jj)), []);
+        title(sprintf('Act. Mag %d',jj));
+        
+        subplot(2,J,J+jj);
+        imshow(angle(x_lasso_reshaped(:, :, jj)), []);
+        title(sprintf('Act. Phase %d',jj));
+    end
+else
+    % For 1-D Data: Plot magnitude and phase
+    figure;
+    subplot(2,1,1); 
+    plot(abs(x_lasso_reconstruct(:, 1)), 'LineWidth', 1.5); 
+    hold on; 
+    plot(abs(x_ground_truth(:, 1)), '--', 'LineWidth', 1.5);
+    hold off;
+    legend('Reconstructed Magnitude','Ground Truth Magnitude');
+    title('1D Magnitude Comparison');
+    
+    subplot(2,1,2); 
+    plot(angle(x_lasso_reconstruct(:, 1)), 'LineWidth', 1.5); 
+    hold on; 
+    plot(angle(x_ground_truth(:, 1)), '--', 'LineWidth', 1.5);
+    hold off;
+    legend('Reconstructed Phase','Ground Truth Phase');
+    title('1D Phase Comparison');
+end
 
 %% Visualizations - Complex LASSO
 if is_2D
   % Reshape the reconstructed signal for Complex LASSO
-    x_lasso_reshaped = reshape(x_lasso_reconstruct(:, 1), n, n);
-    gt_reshaped = x_ground_truth(:, :, 1);
+    x_lasso_reshaped = reshape(x_lasso_reconstruct(:, :), n, n, J);
+    % gt_reshaped = x_ground_truth(:, :, 1);
 
-    % Plot reconstructed magnitude and phase for Complex LASSO
-    figure; imshow(abs(x_lasso_reshaped), []); title('Reconstructed Magnitude (Lasso)'); 
-    figure; imshow(angle(x_lasso_reshaped), []); title('Reconstructed Phase (Lasso)'); 
+    % % Plot reconstructed magnitude and phase for Complex LASSO
+    % figure; imshow(abs(x_lasso_reshaped), []); title('Reconstructed Magnitude (Lasso)'); 
+    % figure; imshow(angle(x_lasso_reshaped), []); title('Reconstructed Phase (Lasso)'); 
+    % 
+    % % Plot ground truth magnitude and phase
+    % figure; imshow(abs(gt_reshaped), []); title('Ground Truth Magnitude (Image 1)'); 
+    % figure; imshow(angle(gt_reshaped), []); title('Ground Truth Phase (Image 1)');
 
-    % Plot ground truth magnitude and phase
-    figure; imshow(abs(gt_reshaped), []); title('Ground Truth Magnitude (Image 1)'); 
-    figure; imshow(angle(gt_reshaped), []); title('Ground Truth Phase (Image 1)');
+    % gt_reshaped = x_ground_truth(:, :, :);
+    
+    figLasso = figure('Name','Lasso Reconstruction','NumberTitle','off');
+    for jj = 1:J
+        subplot(2,J,jj);
+        imshow(abs(x_lasso_reshaped(:, :, jj)), []);
+        title(sprintf('Pred. Mag (Lasso) %d',jj));
+        
+        subplot(2,J,J+jj);
+        imshow(angle(x_lasso_reshaped(:, :, jj)), []);
+        title(sprintf('Pred. Phase (Lasso) %d',jj));
+    end
 else
     % For 1-D Data: Plot magnitude and phase
     figure;
@@ -207,23 +262,36 @@ if is_2D
         imshow(changeMap_reshaped(:, :, jj), []);
         title(sprintf('Change map from img %d to %d',jj, jj+1));
     end
-    for jj = 1:J
-        subplot(2,J,J+jj);
-        imshow(abs(reconstruction_reshaped(:, :, jj)), []);
-        title(sprintf('Sample Reconstruction img %d',jj));
-    end
+    % for jj = 1:J
+    %     subplot(2,J,J+jj);
+    %     imshow(abs(reconstruction_reshaped(:, :, jj)), []);
+    %     title(sprintf('Sample Reconstruction img %d',jj));
+    % end
 end
 % ----jackowatz ends-----------------------
 
 %% Visualizations - Complex JHBL
 if is_2D
-    x_reshaped = reshape(x(:, 1), n, n);
-    gt_reshaped = x_ground_truth(:, :, 1);
+    gt_reshaped = x_ground_truth(:, :, :);
+    
+    figActual = figure('Name','Mag Phase Actual','NumberTitle','off');
+    for jj = 1:J
+        subplot(2,J,jj);
+        imshow(abs(gt_reshaped(:, :, jj)), []);
+        title(sprintf('Act. Mag %d',jj));
+        
+        subplot(2,J,J+jj);
+        imshow(angle(gt_reshaped(:, :, jj)), []);
+        title(sprintf('Act. Phase %d',jj));
+    end
 
-    figure; imshow(abs(x_reshaped), []); title('Reconstructed Magnitude (Image 1)');
-    figure; imshow(angle(x_reshaped), []); title('Reconstructed Phase (Image 1)');
-    figure; imshow(abs(gt_reshaped), []); title('Ground Truth Magnitude (Image 1)');
-    figure; imshow(angle(gt_reshaped), []); title('Ground Truth Phase (Image 1)');
+    % x_reshaped = reshape(x(:, 1), n, n);
+    % gt_reshaped = x_ground_truth(:, :, 1);
+    % 
+    % figure; imshow(abs(x_reshaped), []); title('Reconstructed Magnitude (Image 1)');
+    % figure; imshow(angle(x_reshaped), []); title('Reconstructed Phase (Image 1)');
+    % figure; imshow(abs(gt_reshaped), []); title('Ground Truth Magnitude (Image 1)');
+    % figure; imshow(angle(gt_reshaped), []); title('Ground Truth Phase (Image 1)');
 else
     figure;
     subplot(2,1,1); plot(abs(x(:,1)), 'LineWidth', 1.5); hold on; plot(abs(x_ground_truth(:,1)), '--', 'LineWidth', 1.5);
@@ -233,5 +301,19 @@ else
     subplot(2,1,2); plot(angle(x(:,1)), 'LineWidth', 1.5); hold on; plot(angle(x_ground_truth(:,1)), '--', 'LineWidth', 1.5);
     legend('Reconstructed Phase','Ground Truth Phase');
     title('1D Phase Comparison');
+end
+
+
+% ------gamma plots-------------------
+gamma_reshaped = reshape(gamma', n, n, J-1);
+figPhase = figure('Name','Gamma','NumberTitle','off');
+for jj = 1:J-1
+    normalised_gamma = gamma_reshaped(:, :, jj)/max(gamma_reshaped(:, :, jj), [], "all");
+    subplot(2,J,jj);
+    imagesc(normalised_gamma(:, :));
+    % axis image off;
+    colormap(gray);
+    colorbar;
+    title(sprintf('Gamma Img %d to %d',jj, jj+1));
 end
 toc
