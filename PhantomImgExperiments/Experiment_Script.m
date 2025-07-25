@@ -13,15 +13,15 @@ tic
 
 %% Parameters
 J = 3;
-n = 100;
+n = 150;
 max_iterations = 1e4;
 max_difference = 1e-3;
 sparsity_level = 8;
 noise_mean = 0;
 noise_sd = 0.1;
-phaseType = 'sinosudol';  % type of phase choose between 'sinosudol' and 'smooth'
+phaseType = 'blockySinosudol';  % type of phase choose between 'sinosudol' and 'smooth'
 deltaTheta = 18;          % rotation change of the ellipses between images
-sigma = 0;                % tuning parameter for smooth phase, higher = bettter smooth phase; set to zerop for sinosudol
+sigma = 25;                % tuning parameter for smooth phase, higher = bettter smooth phase; set to 25 for sinosudol
 epsMag = 10^(-3);          % small error to make mag positively biased
 epsPhase = 0;              % error added in each phase
 epsPhase_variation = 10^(-3); % phase difference between subsequent images
@@ -66,14 +66,15 @@ for l = 1:max_iterations
         alpha(j) = (eta_alpha + M(j) - 1) / (theta_alpha + norm(abs(F(x(:, j)) - y(:, j)),2)^2);
     end
 
-    for j = 1:J
-        Theta_j = x(:, j) ./ (abs(x(:, j))); % phase calculation
-        % apply TV only to magnitude
-        LTheta_j = R .* Theta_j';          
-
-        R_x = LTheta_j * x(:, j);
-        beta(j, :) = eta_beta ./ (theta_beta + abs(R_x).^2);
-    end
+    %LTheta = zeros([size(R) J]);
+    % for jj = 1:J
+    %     Theta_jj = x(:, jj) ./ (abs(x(:, jj))); % phase calculation
+    %     % apply TV only to magnitude
+    %     LTheta(:, :, jj) = R .* Theta_jj';          
+    % 
+    %     R_x = LTheta(:, :, jj) * x(:, jj);
+    %     beta(j, :) = eta_beta ./ (theta_beta + abs(R_x).^2);
+    % end
 
     for j = 2:J
         gamma(j-1, :) = eta_gamma ./ (theta_gamma + abs(x(:, j-1) - x(:, j)).^2);
@@ -90,6 +91,12 @@ for l = 1:max_iterations
             change_mask_G = gamma(j-1, :).' + gamma(j, :).';
             change_term_b = gamma(j-1, :).' .* x(:, j-1) + gamma(j, :).'.* x(:, j+1);
         end
+        
+        Theta_j = x(:, j) ./ (abs(x(:, j))); % phase calculation
+        % apply TV only to magnitude
+        LTheta_j = R .* Theta_j';
+        R_x = LTheta_j * x(:, j);
+        beta(j, :) = eta_beta ./ (theta_beta + abs(R_x).^2);
 
         G_j = @(x_var) alpha(j)*FH(F(x_var)) + LTheta_j' * (beta(j,:).' .* (LTheta_j * x_var)) + change_mask_G .* x_var;
         b_j = alpha(j)*FH(y(:, j)) + change_term_b;
