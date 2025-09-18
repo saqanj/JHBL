@@ -1,0 +1,115 @@
+function [mag, phase, II] = phantom_image_gen(phaseType, ...
+    J, n, ...
+    deltaTheta, sigma, ...
+    epsMag, epsPhase, epsPhase_variation, ...
+    phase_indices_to_change, visualise)
+
+%PHANTOM_IMAGE_GEN function to generate magnitude and phase of phantom
+% 
+%  Inputs
+%  ------
+%   J                       = number of images.
+%   n                       = number of pixels in an image (n*n pixels)
+%   delta_theta             = rotation angle of inner ellipses (degrees)
+%   sigma                   = smoothness param for smooth phase fxn
+%   epsMag                  = magnitude bias to make mag positive
+%   eps_phase               = error added in chosen indices
+%   eps_phase_variation     = phase_difference between subsequent phase
+%   phase_indices_to_change = Fraction (0-1) of phase indices to change 
+%                               phase
+%   visualise               = 1 or 0 to visualise or not
+% 
+% Outputs
+% -------
+% mag    n^2*J array for images magnitude
+% phase  n^2*J array for image phases
+% II     n^2*J array for complex image itself
+% 
+% Example
+% -------
+% [mag,phase,I] = phantom_image_gen(3,256,20,25,1e-3,1e-3,1e-3,0.5);
+% ------------------------------------------------------------------
+
+% Input validation -------------------------------
+if phase_indices_to_change >=1 || phase_indices_to_change <= 0
+    phase_indices_to_change = 0.25;
+end
+if visualise ~= 0 && visualise ~= 1
+    visualise = 1;
+end
+visualise = logical(visualise);
+% -----------------------------------------------
+
+E = [ ...
+  1.0   .6900  .920   0       0      0 ;  % head; the oval white matter
+ -0.8   .6624  .874   0      -.0184  0 ;  % the grey matter inside the white matter
+ -0.2   .1100  .310  +.22     0     -18 ; % the back eclipse in the right inside the grey matter
+ -0.2   .1600  .410  -.22     0     +18 ; % the back eclipse in the left inside the grey matter
+  0.1   .2100  .250   0      +.35    0 ;  % brighter upper white matter inside the grey matter
+  0.1   .0460  .046   0      +.10    0 ;  % right bright spot
+  0.1   .0460  .046   0      -.10    0 ;  % left bright spot
+  0.1   .0460  .023  -.08    -.605   0 ;  % the leftmost small ellipse at the bottom
+  0.1   .0230  .023   0      -.606   0 ;  % the middle small ellipse at the bottom 
+  0.1   .0230  .046  +.06    -.605   0 ]; % the rightmost small ellipse at the bottom
+
+% % the columns of E are documented in https://www.mathworks.com/help/images/ref/phantom.html
+
+% Output initialisation
+npix  = n*n;
+mag   = zeros(npix,J);
+phase = zeros(npix,J);
+II    = zeros(npix,J);
+
+if strcmpi(phaseType,'sinosudol')
+    [phi, dphi] = sinosudolPhase(n);
+elseif strcmpi(phaseType,'blockySinosudol')
+    [blocky_phi] = blockySinosudolPhase(J, n);
+else 
+    % smooth phase
+    phi_without_noise = smoothPhase(n, sigma, 1);
+end
+
+for jj = 1:J
+    % magnitude -------------------------------------
+    j_mag = abs(phantom(E, n)) + epsMag;
+    mag(:, jj) = j_mag(:);
+    E(3, 6) = E(3, 6) + deltaTheta;
+    E(4, 6) = E(4, 6) - deltaTheta/2;
+    
+    % phase -----------------------------------------
+    if strcmpi(phaseType,'sinosudol')
+        phi  = phi + dphi;
+    elseif strcmpi(phaseType,'blockySinosudol')
+        phi = reshape(blocky_phi(:, :, jj), n^2, 1);
+    else
+        % smooth phase
+        phi = phi_without_noise;
+        % selecting indices for small error 
+        num_of_idx = ceil(phase_indices_to_change*n);
+        r = randperm(n, num_of_idx);
+        c = randperm(n, num_of_idx);
+        phi(r, c) = phi(r, c) + epsPhase;
+        % vary phi for next round
+        phi_without_noise = phi_without_noise + epsPhase_variation;
+    end
+    phase(:,jj) = phi(:);
+
+    II(:, jj) = mag(:, jj) .* exp(1i * phase(:, jj));
+end
+
+if visualise
+    figure('Name','Synthetic SAR sequence','NumberTitle','off');
+    for jj = 1:J
+        subplot(2,J,jj);
+        imshow(reshape(mag(:, jj), [n,n]),[]); 
+        title(sprintf('Mag %d',jj));
+        
+        subplot(2,J,J+jj);
+        imagesc( reshape(phase(:,jj), [n, n]));
+        axis image off;
+        colormap(gray);
+        colorbar;
+        title(sprintf('Phase %d',jj));
+    end
+end
+end
