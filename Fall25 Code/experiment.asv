@@ -1,0 +1,51 @@
+datadir = 'CCD-CP-CoPol/HH/';
+pass1 = 'FP0120';
+matfile = 'c00007a283p50.mat';
+fullpath = fullfile(datadir, pass1, matfile);
+
+
+S = load(fullpath);
+
+I = S.SARdataOut;
+
+block_size = 250;
+%[rows, cols] = size(I);
+% rowStart = randi(rows - block_size + 1);
+% colStart = randi(cols - block_size + 1);
+% I_crop = I(rowStart : rowStart + block_size - 1, colStart : colStart + block_size - 1);
+
+rowStart = 100;
+colStart = 500;
+
+I_crop = I(rowStart : rowStart + block_size - 1, colStart : colStart + block_size - 1);
+
+I_mag = abs(I_crop);
+IdB = 20*log10(max(I_mag, eps));
+lo = prctile(IdB(:), 2);
+high= prctile(IdB(:), 98);
+
+figure;
+subplot(1,2,1);
+imagesc(I_mag, [lo, high]);
+axis image off;
+colormap(gca, gray);
+colorbar;
+title('SAR HH - FP0120 (Magnitude)');
+
+I_phase = angle(I_crop);  % radians in [-pi, pi]
+
+subplot(1,2,2);
+imagesc(I_phase, [-pi, pi]);
+axis image off;
+colormap(gca, hsv);  % cyclic color map for phase
+colorbar('Ticks',[-pi -pi/2 0 pi/2 pi], ...
+         'TickLabels',{'-π','-π/2','0','π/2','π'});
+title('SAR HH - FP0120 (Phase)');
+
+x_ground_truth = reshape(I_crop, [block_size, block_size, 1]);
+
+
+
+tic
+[x_reshaped,x_lasso_reshaped, gamma_reshaped, changeMap_reshaped] = compare(x_ground_truth);
+toc
